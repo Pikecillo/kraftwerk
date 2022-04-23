@@ -58,8 +58,6 @@ template <size_t dim> class LinearRegression {
         return m_linearModel.eval(adjustedX);
     }
 
-    const LinearModel<dim> &getModel() const { return m_linearModel; }
-
   private:
     double costFunction(const TrainingSet& trainingSet) const {
         const double numExamples = static_cast<double>(trainingSet.size());
