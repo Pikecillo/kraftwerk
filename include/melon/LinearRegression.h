@@ -8,9 +8,6 @@
 #include <numeric>
 #include <vector>
 
-#include <iostream>
-#include <iomanip>
-
 namespace ml {
 /**
    Linear model regression.
@@ -23,12 +20,14 @@ template <size_t dim> class LinearRegression {
     using TrainingSet = std::vector<TrainingExample>;
 
     void fit(const TrainingSet &trainingSet) {
+        computeStatistics(trainingSet);
+
         Random random;
         m_linearModel.setParams(random.uniform<dim + 1>(-0.5, 0.5));
 
         const double errorTolerance = 1E-3;
         double prevCost = costFunction(trainingSet);
-        double absoluteError = std::numeric_limits<double>::max();
+        double relativeError = std::numeric_limits<double>::max();
         double learningRate = 0.1;
         const int maxIter = 10000;
         int numIterations = 0;
@@ -45,16 +44,19 @@ template <size_t dim> class LinearRegression {
 
             if(currCost > prevCost) {
                 m_linearModel.setParams(params);
-                learningRate /= 10;
+                learningRate /= 5.0;
                 continue;
             }
 
-            absoluteError = std::fabs(prevCost - currCost);
-            prevCost = currCost;     
-        } while(absoluteError > errorTolerance && numIterations < maxIter);
+            relativeError = std::fabs(prevCost - currCost) / currCost;
+            prevCost = currCost;
+        } while(relativeError > errorTolerance && numIterations < maxIter);
     }
 
-    double predict(const Input &x) const { return m_linearModel.eval(x); }
+    double predict(const Input &x) const { 
+        const auto adjustedX = (x - m_means) / m_sdevs;
+        return m_linearModel.eval(adjustedX);
+    }
 
     const LinearModel<dim> &getModel() const { return m_linearModel; }
 
@@ -64,7 +66,7 @@ template <size_t dim> class LinearRegression {
 
         double cost = 0.0;
         for(const auto& [x, y]: trainingSet) {
-            double diff = m_linearModel.eval(x) - y;
+            double diff = predict(x) - y;
             cost += (diff * diff);
         }
 
@@ -84,7 +86,7 @@ template <size_t dim> class LinearRegression {
 
             for (size_t j = 0; j < trainingSet.size(); j++) {
                 const auto &[x, y] = trainingSet[j];
-                double diff = (m_linearModel.eval(x) - y);
+                double diff = (predict(x) - y);
                 if(i < grad.size() - 1)
                     sum += diff * x[i];
                 else
@@ -97,7 +99,27 @@ template <size_t dim> class LinearRegression {
         return grad;
     }
 
+    void computeStatistics(const TrainingSet& trainingSet) {
+        const double numExamples = static_cast<double>(trainingSet.size());
+        m_means = {0};
+        for(const auto& example: trainingSet) {
+            const auto& x = example.first;
+            m_means += x;
+        }
+        m_means /= numExamples;
+
+        m_sdevs = {0};
+        for(const auto& example: trainingSet) {
+            const auto& x = example.first;
+            const auto diff = x - m_means;
+            m_sdevs += (diff * diff);
+        }
+
+        m_sdevs = apply<dim>(m_sdevs / numExamples, [](double x){ return sqrt(x); });
+    }
+
   private:
+    Vector<dim> m_means, m_sdevs;
     LinearModel<dim> m_linearModel;
 };
 

@@ -3,7 +3,7 @@
 #include <melon/Random.h>
 
 #include <gtest/gtest.h>
-
+#include <iostream>
 namespace {
 template <size_t dim>
 using TrainingSet = typename ml::LinearRegression<dim>::TrainingSet;
