@@ -21,12 +21,12 @@ template <size_t dim> class LogisticRegressionCostFunction {
 
         double cost = 0.0;
         for (const auto &[x, y] : m_trainingSet) {
-            double diff = linearModel.eval(x) - y;
-            cost += (diff * diff);
+            double prediction = 1.0 / 1.0 + std::exp(-linearModel.eval(x));
+            cost += (y * log(prediction) + (1.0 - y) * log(1.0 - prediction));
         }
 
         const double numExamples = static_cast<double>(m_trainingSet.size());
-        return 0.5 * cost / numExamples;
+        return -cost / numExamples;
     }
 
     gradient_type gradient(const input_type &input) const {
