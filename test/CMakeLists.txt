@@ -31,6 +31,15 @@ target_link_libraries(TestLinearRegression
     pthread
 )
 
+add_executable(TestLogisticRegression
+    TestLogisticRegression.cpp
+)
+target_link_libraries(TestLogisticRegression
+    gtest
+    gtest_main
+    pthread
+)
+
 add_executable(TestTypes
     TestTypes.cpp
 )

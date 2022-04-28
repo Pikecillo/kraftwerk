@@ -1,5 +1,5 @@
 #include <melon/LinearModel.h>
-#include <melon/LinearRegression.h>
+#include <melon/LogisticRegression.h>
 #include <melon/Random.h>
 
 #include <gtest/gtest.h>
@@ -23,12 +23,12 @@ TrainingSet<dim> createSyntheticTrainingSet(const ml::LinearModel<dim> &model,
 }
 } // namespace
 
-TEST(TestLinearRegression, predict) {
+TEST(TestLogisticRegression, predict) {
     ml::LinearModel<10> model({3.0, 1.0, -4.0, 10.0, 1.5, -1.5, 3.0, 4.7 - 4.7, -10.0, 4.5});
     const size_t numExamples = 1000;
     const auto trainingSet = createSyntheticTrainingSet(model, numExamples);
 
-    ml::LinearRegression<10> regression;
+    ml::LogisticRegression<10> regression;
     regression.fit(trainingSet);
 
     ml::Random random;
