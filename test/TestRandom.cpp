@@ -10,7 +10,7 @@ TEST(TestRandom, uniform) {
 
     {
         double sum = 0.0;
-        const auto values = random.uniform<1000>(lo, hi);
+        const auto values = random.uniform<ml::Vector<1000>>(lo, hi);
 
         for (const auto &val : values) {
             EXPECT_LE(val, hi);

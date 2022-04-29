@@ -3,19 +3,18 @@
 #include <melon/Random.h>
 
 #include <gtest/gtest.h>
-#include <iostream>
+
 namespace {
-template <size_t dim> using TrainingSet = typename ml::RegressionTraits<dim>::training_set_type;
 
 template <size_t dim>
-TrainingSet<dim> createSyntheticTrainingSet(const ml::LinearModel<dim> &model,
-                                            const size_t numExamples) {
-    TrainingSet<dim> trainingSet;
+ml::TrainingSet<dim> createSyntheticTrainingSet(const ml::LinearModel<dim> &model,
+                                                const size_t numExamples) {
+    ml::TrainingSet<dim> trainingSet;
     size_t count = 0;
     ml::Random random;
 
     while (count++ < numExamples) {
-        const auto x = random.uniform<dim>(-10.0, 10.0);
+        const auto x = random.uniform<ml::Vector<dim>>(-10.0, 10.0);
         trainingSet.emplace_back(x, model.eval(x));
     }
 
@@ -32,8 +31,8 @@ TEST(TestLinearRegression, predict) {
     regression.fit(trainingSet);
 
     ml::Random random;
-    const auto x = random.uniform<10>(-1.0, 1.0);
-    ASSERT_NEAR(regression.predict(x), model.eval(x), 0.1);
+    const auto x = random.uniform<ml::Vector<10>>(-1.0, 1.0);
+    ASSERT_NEAR(regression.predict(x), model.eval(x), 0.01);
 }
 
 int main(int argc, char **argv) {

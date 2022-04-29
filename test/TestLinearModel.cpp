@@ -14,15 +14,15 @@ TEST(TestLinearModel, constructor) {
     EXPECT_EQ(model.eval(ml::Vector<4>{1.0, 2.0, 3.0, 4.0}), 35.0);
 }
 
-TEST(TestLinearModel, setParams) {
+TEST(TestLinearModel, setParameters) {
     ml::LinearModel<4> model;
     const ml::Vector<5> expected = {1.0, 2.0, 3.0, 4.0, 5.0};
 
-    model.setParams(expected);
+    model.setParameters(expected);
     EXPECT_EQ(model.eval(ml::Vector<4>{1.0, 2.0, 3.0, 4.0}), 35.0);
 
-    const auto current = model.params();
-    for(size_t i = 0; i < current.size(); i++)
+    const auto current = model.parameters();
+    for (size_t i = 0; i < current.size(); i++)
         EXPECT_EQ(expected[i], current[i]);
 }
 

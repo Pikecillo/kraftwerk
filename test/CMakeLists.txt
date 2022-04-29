@@ -4,6 +4,15 @@ include_directories(${MELON_HOME}/include)
 
 find_package(OpenSSL REQUIRED)
 
+add_executable(TestGradientDescent
+    TestGradientDescent.cpp
+)
+target_link_libraries(TestGradientDescent
+    gtest
+    gtest_main
+    pthread
+)
+
 add_executable(TestLinearModel
     TestLinearModel.cpp
 )

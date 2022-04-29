@@ -7,24 +7,25 @@
 namespace ml {
 template <size_t dim> class LinearModel {
   public:
-    static constexpr size_t NumVars = dim;
-    static constexpr size_t NumParams = NumVars + 1;
-    using input_type = Vector<NumVars>;
-    using params_type = Vector<NumParams>;
+    static constexpr size_t ArgumentDim = dim;
+    static constexpr size_t NumParameters = ArgumentDim + 1;
 
-    LinearModel() = default;
+    using argument_type = Vector<ArgumentDim>;
+    using parameters_type = Vector<NumParameters>;
 
-    LinearModel(const params_type &params) { setParams(params); }
+    LinearModel() : m_parameters{} {};
 
-    void setParams(const params_type &params) { m_params = params; }
+    LinearModel(const parameters_type &parameters) { setParameters(parameters); }
 
-    const params_type &params() const { return m_params; }
+    void setParameters(const parameters_type &parameters) { m_parameters = parameters; }
 
-    double eval(const input_type &x) const {
-        return std::inner_product(x.begin(), x.end(), m_params.begin(), m_params.back());
+    const parameters_type &parameters() const { return m_parameters; }
+
+    double eval(const argument_type &x) const {
+        return std::inner_product(x.begin(), x.end(), m_parameters.begin(), m_parameters.back());
     }
 
   private:
-    params_type m_params{};
+    parameters_type m_parameters;
 };
 } // namespace ml

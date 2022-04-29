@@ -4,21 +4,21 @@
 
 namespace ml {
 
-template <typename FunctionType> class GradientDescent {
+/**
+ * Gradient descent optimization.
+ */
+class GradientDescent {
   public:
-    using function_type = FunctionType;
-    using input_type = typename function_type::input_type;
-
     struct HyperParameters {
         bool minimize = true;
         double learningRate = 0.1;
         double relativeErrorTolerance = 1E-3;
-        int maxIter = 10000;
+        size_t maxIter = 10000;
         double reductionFactor = 0.2;
     };
 
-    struct Result {
-        input_type optimalParameters;
+    template <typename TArguments> struct Result {
+        TArguments optimalArguments;
         double optimalValue;
     };
 
@@ -27,21 +27,27 @@ template <typename FunctionType> class GradientDescent {
         return *this;
     }
 
-    Result optimize(const function_type &function, const input_type &initialParams) {
+    template <typename TDifferentiableFunction>
+    Result<typename TDifferentiableFunction::argument_type>
+    optimize(const TDifferentiableFunction &function,
+             const typename TDifferentiableFunction::argument_type &initialArguments) const {
+        using argument_type = typename TDifferentiableFunction::argument_type;
+
+        argument_type arguments = initialArguments;
         auto relativeError = std::numeric_limits<double>::max();
-        input_type params = initialParams;
-        auto prevValue = function.eval(initialParams);
-        int numIterations = 0;
+        auto prevValue = function.eval(initialArguments);
+        auto learningRate = m_hyperParameters.learningRate;
+        size_t numIterations = 0;
 
         do {
-            const auto gradient = function.gradient(params);
-            const input_type updatedParams = params - m_hyperParameters.learningRate * gradient;
-            const auto currValue = function.eval(updatedParams);
+            const auto gradient = function.gradient(arguments);
+            const argument_type updatedArguments = arguments - learningRate * gradient;
+            const auto currValue = function.eval(updatedArguments);
 
             if (currValue > prevValue) {
-                m_hyperParameters.learningRate *= m_hyperParameters.reductionFactor;
+                learningRate *= m_hyperParameters.reductionFactor;
             } else {
-                params = updatedParams;
+                arguments = updatedArguments;
                 relativeError = std::fabs(prevValue - currValue) / currValue;
                 prevValue = currValue;
             }
@@ -50,7 +56,7 @@ template <typename FunctionType> class GradientDescent {
         } while (relativeError > m_hyperParameters.relativeErrorTolerance &&
                  numIterations < m_hyperParameters.maxIter);
 
-        return Result{params, prevValue};
+        return Result<argument_type>{arguments, prevValue};
     }
 
   private:

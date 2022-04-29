@@ -7,10 +7,10 @@
 namespace ml {
 class Random {
   public:
-    template <size_t dim> Vector<dim> uniform(const double lo, const double hi) {
+    template <typename OutputT> OutputT uniform(const double lo, const double hi) {
         std::uniform_real_distribution<double> uniformDistribution(std::min(lo, hi),
                                                                    std::max(lo, hi));
-        Vector<dim> v;
+        OutputT v;
         for (auto &elem : v) {
             elem = uniformDistribution(m_generator);
         }

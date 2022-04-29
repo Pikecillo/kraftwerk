@@ -4,48 +4,88 @@
 #include <melon/LinearModel.h>
 #include <melon/Random.h>
 
+#include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace ml {
+
+template <typename TModel> class CostFunction {
+  public:
+    using model_type = TModel;
+    using argument_type = typename model_type::parameters_type;
+    using gradient_type = argument_type;
+    using training_set_type = TrainingSet<model_type::ArgumentDim>;
+
+    CostFunction(const training_set_type &trainingSet) : m_trainingSet(trainingSet) {}
+
+    gradient_type gradient(const argument_type &input) const {
+        const double numExamples = static_cast<double>(m_trainingSet.size());
+        gradient_type grad;
+        model_type model(input);
+
+        for (size_t i = 0; i < grad.size(); i++) {
+            double sum = 0.0;
+
+            for (size_t j = 0; j < m_trainingSet.size(); j++) {
+                const auto &[x, y] = m_trainingSet[j];
+                const double diff = (model.eval(x) - y);
+                if (i < grad.size() - 1)
+                    sum += diff * x[i];
+                else
+                    sum += diff;
+            }
+
+            grad[i] = sum / numExamples;
+        }
+
+        return grad;
+    }
+
+  protected:
+    const training_set_type &m_trainingSet;
+};
+
 /**
    Linear model regression.
  */
-template <size_t dim> struct RegressionTraits {
-    using input_type = typename LinearModel<dim>::input_type;
-    using params_type = typename LinearModel<dim>::params_type;
-    using training_example_type = std::pair<input_type, double>;
-    using training_set_type = std::vector<training_example_type>;
-};
-
-template <typename DifferentiableFunction, size_t dim> class Regression {
+template <typename TModel, typename TCostFunction> class Regression {
   public:
-    using input_type = typename RegressionTraits<dim>::input_type;
-    using params_type = typename RegressionTraits<dim>::params_type;
-    using training_example = typename RegressionTraits<dim>::training_example_type;
-    using training_set = typename RegressionTraits<dim>::training_set_type;
+    static constexpr size_t ArgumentDim = TModel::ArgumentDim;
+    static constexpr size_t NumParameters = TModel::NumParameters;
+
+    using model_type = TModel;
+    using cost_function_type = TCostFunction;
+    using argument_type = typename model_type::argument_type;
+    using parameters_type = typename model_type::parameters_type;
+    using training_set_type = TrainingSet<ArgumentDim>;
+
+    static_assert(std::is_same<typename cost_function_type::argument_type, parameters_type>::value);
 
     virtual ~Regression() = default;
 
-    void fit(const training_set &trainingSet) {
-        const training_set &adjustedTrainingSet = adjustTrainingSet(trainingSet);
-        GradientDescent<DifferentiableFunction> gradientDescent;
+    void fit(const training_set_type &trainingSet) {
+        const training_set_type &adjustedTrainingSet = adjustTrainingSet(trainingSet);
+        GradientDescent gradientDescent;
         const auto &costFunction = getCostFunction(adjustedTrainingSet);
-        const auto initialParams = Random().uniform<dim + 1>(-0.5, 0.5);
-        const auto result = gradientDescent.optimize(costFunction, initialParams);
+        const auto initialParameters = Random().uniform<parameters_type>(-0.5, 0.5);
+        const auto result = gradientDescent.optimize(costFunction, initialParameters);
 
-        m_linearModel.setParams(result.optimalParameters);
+        m_model.setParameters(result.optimalArguments);
     }
 
-    virtual double predict(const input_type &x) const { return m_linearModel.eval(adjustInput(x)); }
+    virtual double predict(const argument_type &x) const { return m_model.eval(adjustInput(x)); }
 
   protected:
-    virtual DifferentiableFunction getCostFunction(const training_set &trainingSet) = 0;
+    virtual cost_function_type getCostFunction(const training_set_type &trainingSet) = 0;
 
-    input_type adjustInput(const input_type &x) const { return (x - m_means) / m_sdevs; }
+    /**
+     * Adjust argument value to account for feature scaling and mean normalization.
+     */
+    argument_type adjustInput(const argument_type &x) const { return (x - m_means) / m_sdevs; }
 
-    Vector<dim> computePerFeatureMean(const training_set &trainingSet) {
-        Vector<dim> means = {0.0};
+    argument_type computePerFeatureMean(const training_set_type &trainingSet) {
+        argument_type means = {0.0};
 
         for (const auto &example : trainingSet) {
             const auto &x = example.first;
@@ -58,8 +98,9 @@ template <typename DifferentiableFunction, size_t dim> class Regression {
         return means;
     }
 
-    Vector<dim> computePerFeatureSDev(const training_set &trainingSet, const Vector<dim> &means) {
-        Vector<dim> sdevs = {0};
+    argument_type computePerFeatureSDev(const training_set_type &trainingSet,
+                                        const argument_type &means) {
+        argument_type sdevs = {0};
         for (const auto &example : trainingSet) {
             const auto &x = example.first;
             const auto diff = x - means;
@@ -67,16 +108,19 @@ template <typename DifferentiableFunction, size_t dim> class Regression {
         }
 
         const auto numExamples = static_cast<double>(trainingSet.size());
-        sdevs = apply<dim>(sdevs / numExamples, [](double x) { return sqrt(x); });
+        sdevs = apply<ArgumentDim>(sdevs / numExamples, [](double x) { return sqrt(x); });
 
         return sdevs;
     }
 
-    training_set adjustTrainingSet(const training_set &trainingSet) {
+    /**
+     * Perform feature scaling and mean normalization on trainingSet.
+     */
+    training_set_type adjustTrainingSet(const training_set_type &trainingSet) {
         m_means = computePerFeatureMean(trainingSet);
         m_sdevs = computePerFeatureSDev(trainingSet, m_means);
 
-        training_set adjustedTrainingSet;
+        training_set_type adjustedTrainingSet;
 
         for (const auto &[x, y] : trainingSet) {
             adjustedTrainingSet.emplace_back(adjustInput(x), y);
@@ -86,7 +130,7 @@ template <typename DifferentiableFunction, size_t dim> class Regression {
     }
 
   protected:
-    Vector<dim> m_means, m_sdevs;
-    LinearModel<dim> m_linearModel;
+    argument_type m_means, m_sdevs;
+    model_type m_model;
 };
 } // namespace ml

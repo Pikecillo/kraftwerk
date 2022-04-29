@@ -4,68 +4,45 @@
 #include <melon/Regression.h>
 
 namespace ml {
-template <size_t dim>
-class LinearRegressionCostFunction {
-      public:
-    using input_type = typename RegressionTraits<dim>::params_type;
-    using gradient_type = input_type;
-    using training_example_type = typename RegressionTraits<dim>::training_example_type;
-    using training_set_type = typename RegressionTraits<dim>::training_set_type;
 
-      public:
-        LinearRegressionCostFunction(const training_set_type &trainingSet) : m_trainingSet(trainingSet) {}
+template <size_t dim> class LinearRegressionCostFunction : public CostFunction<LinearModel<dim>> {
+  public:
+    using model_type = LinearModel<dim>;
+    using argument_type = typename model_type::parameters_type;
+    using gradient_type = argument_type;
+    using training_set_type = TrainingSet<dim>;
 
-        double eval(const input_type &input) const {
-            LinearModel<dim> linearModel(input);
-            linearModel.setParams(input);
+  public:
+    LinearRegressionCostFunction(const training_set_type &trainingSet)
+        : CostFunction<model_type>(trainingSet) {}
 
-            double cost = 0.0;
-            for (const auto &[x, y] : m_trainingSet) {
-                double diff = linearModel.eval(x) - y;
-                cost += (diff * diff);
-            }
+    double eval(const argument_type &input) const {
+        model_type model(input);
+        model.setParameters(input);
 
-            const double numExamples = static_cast<double>(m_trainingSet.size());
-            return 0.5 * cost / numExamples;
+        double cost = 0.0;
+        for (const auto &[x, y] : this->m_trainingSet) {
+            const double diff = model.eval(x) - y;
+            cost += (diff * diff);
         }
 
-        gradient_type gradient(const input_type &input) const {
-            const double numExamples = static_cast<double>(m_trainingSet.size());
-            gradient_type grad;
-            LinearModel<dim> linearModel(input);
-
-            for (size_t i = 0; i < grad.size(); i++) {
-                double sum = 0.0;
-
-                for (size_t j = 0; j < m_trainingSet.size(); j++) {
-                    const auto &[x, y] = m_trainingSet[j];
-                    double diff = (linearModel.eval(x) - y);
-                    if (i < grad.size() - 1)
-                        sum += diff * x[i];
-                    else
-                        sum += diff;
-                }
-
-                grad[i] = sum / numExamples;
-            }
-
-            return grad;
-        }
-
-      private:
-        const training_set_type &m_trainingSet;
-    };
+        const double numExamples = static_cast<double>(this->m_trainingSet.size());
+        return 0.5 * cost / numExamples;
+    }
+};
 
 /**
    Linear model regression.
  */
-template <size_t dim> class LinearRegression : public Regression<LinearRegressionCostFunction<dim>, dim> {
+template <size_t dim>
+class LinearRegression : public Regression<LinearModel<dim>, LinearRegressionCostFunction<dim>> {
   public:
-    using training_set_type = typename RegressionTraits<dim>::training_set_type;
+    using cost_function_type = LinearRegressionCostFunction<dim>;
+    using training_set_type = typename cost_function_type::training_set_type;
 
   private:
-
-    virtual LinearRegressionCostFunction<dim> getCostFunction(const training_set_type &trainingSet) {
+    virtual LinearRegressionCostFunction<dim>
+    getCostFunction(const training_set_type &trainingSet) {
         return LinearRegressionCostFunction<dim>(trainingSet);
     }
 };
