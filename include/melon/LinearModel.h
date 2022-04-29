@@ -13,7 +13,7 @@ template <size_t dim> class LinearModel {
     using argument_type = Vector<ArgumentDim>;
     using parameters_type = Vector<NumParameters>;
 
-    LinearModel() : m_parameters{} {};
+    LinearModel() : m_parameters() {};
 
     LinearModel(const parameters_type &parameters) { setParameters(parameters); }
 

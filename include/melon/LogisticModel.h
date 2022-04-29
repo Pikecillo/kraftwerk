@@ -8,10 +8,10 @@ namespace ml {
 template <size_t dim> class LogisticModel {
   public:
     static constexpr size_t ArgumentDim = dim;
-    static constexpr size_t NumParams = ArgumentDim + 1;
+    static constexpr size_t NumParameters = ArgumentDim + 1;
 
     using argument_type = Vector<ArgumentDim>;
-    using parameters_type = Vector<NumParams>;
+    using parameters_type = Vector<NumParameters>;
 
     LogisticModel() = default;
 

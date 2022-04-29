@@ -17,8 +17,7 @@ template <size_t dim> class LinearRegressionCostFunction : public CostFunction<L
         : CostFunction<model_type>(trainingSet) {}
 
     double eval(const argument_type &input) const {
-        model_type model(input);
-        model.setParameters(input);
+        const model_type model(input);
 
         double cost = 0.0;
         for (const auto &[x, y] : this->m_trainingSet) {

@@ -21,8 +21,8 @@ template <typename TModel> class CostFunction {
 
     gradient_type gradient(const argument_type &input) const {
         const double numExamples = static_cast<double>(m_trainingSet.size());
+        const model_type model(input);
         gradient_type grad;
-        model_type model(input);
 
         for (size_t i = 0; i < grad.size(); i++) {
             double sum = 0.0;
@@ -36,8 +36,10 @@ template <typename TModel> class CostFunction {
                     sum += diff;
             }
 
-            grad[i] = sum / numExamples;
+            grad[i] = sum;
         }
+
+        grad /= numExamples;
 
         return grad;
     }

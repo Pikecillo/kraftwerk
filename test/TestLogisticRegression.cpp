@@ -14,7 +14,7 @@ ml::TrainingSet<dim> createSyntheticTrainingSet(const ml::LogisticModel<dim> &mo
 
     while (count++ < numExamples) {
         const auto x = random.uniform<ml::Vector<dim>>(-10.0, 10.0);
-        trainingSet.emplace_back(x, std::floor(model.eval(x) + 0.5));
+        trainingSet.emplace_back(x, model.eval(x));
     }
 
     return trainingSet;

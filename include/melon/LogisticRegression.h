@@ -3,6 +3,8 @@
 #include <melon/LogisticModel.h>
 #include <melon/Regression.h>
 
+#include <cmath>
+
 namespace ml {
 template <size_t dim>
 class LogisticRegressionCostFunction : public CostFunction<LogisticModel<dim>> {
@@ -18,15 +20,15 @@ class LogisticRegressionCostFunction : public CostFunction<LogisticModel<dim>> {
 
     double eval(const argument_type &input) const {
         model_type model(input);
-        model.setParameters(input);
 
         double cost = 0.0;
         for (const auto &[x, y] : this->m_trainingSet) {
-            const double prediction = 1.0 / (1.0 + std::exp(-model.eval(x)));
-            cost += (y * log(prediction) + (1.0 - y) * log(1.0 - prediction));
+            const double prediction = model.eval(x);
+            cost += (y * std::log(prediction) + (1.0 - y) * std::log(1.0 - prediction));
         }
 
         const double numExamples = static_cast<double>(this->m_trainingSet.size());
+        
         return -cost / numExamples;
     }
 };

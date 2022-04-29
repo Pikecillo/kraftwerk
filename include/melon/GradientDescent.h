@@ -12,7 +12,7 @@ class GradientDescent {
     struct HyperParameters {
         bool minimize = true;
         double learningRate = 0.1;
-        double relativeErrorTolerance = 1E-3;
+        double relativeErrorTolerance = 1E-5;
         size_t maxIter = 10000;
         double reductionFactor = 0.2;
     };
@@ -35,7 +35,7 @@ class GradientDescent {
 
         argument_type arguments = initialArguments;
         auto relativeError = std::numeric_limits<double>::max();
-        auto prevValue = function.eval(initialArguments);
+        auto prevValue = function.eval(arguments);
         auto learningRate = m_hyperParameters.learningRate;
         size_t numIterations = 0;
 
