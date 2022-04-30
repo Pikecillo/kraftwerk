@@ -1,7 +1,9 @@
 #pragma once
 
-#include <cmath>
+#include <melon/Types.h>
 
+#include <cmath>
+#include <iostream>
 namespace ml {
 
 /**
@@ -11,10 +13,10 @@ class GradientDescent {
   public:
     struct HyperParameters {
         bool minimize = true;
-        double learningRate = 0.1;
         double relativeErrorTolerance = 1E-5;
         size_t maxIter = 10000;
-        double reductionFactor = 0.2;
+        double searchControlFactor = 0.8; // (0, 1)
+        double reductionFactor = 0.8;     // (0, 1)
     };
 
     template <typename TArguments> struct Result {
@@ -36,27 +38,47 @@ class GradientDescent {
         argument_type arguments = initialArguments;
         auto relativeError = std::numeric_limits<double>::max();
         auto prevValue = function.eval(arguments);
-        auto learningRate = m_hyperParameters.learningRate;
         size_t numIterations = 0;
 
         do {
-            const auto gradient = function.gradient(arguments);
-            const argument_type updatedArguments = arguments - learningRate * gradient;
-            const auto currValue = function.eval(updatedArguments);
+            const auto result = backtrackingLineSearch(function, arguments);
 
-            if (currValue > prevValue) {
-                learningRate *= m_hyperParameters.reductionFactor;
-            } else {
-                arguments = updatedArguments;
-                relativeError = std::fabs(prevValue - currValue) / currValue;
-                prevValue = currValue;
-            }
+            std::cout << "From backtacking opValue " << result.optimalValue << std::endl;
 
+            arguments = result.optimalArguments;
+            relativeError = (prevValue - result.optimalValue) / prevValue;
+            prevValue = result.optimalValue;
             numIterations++;
         } while (relativeError > m_hyperParameters.relativeErrorTolerance &&
                  numIterations < m_hyperParameters.maxIter);
 
-        return Result<argument_type>{arguments, prevValue};
+        return {arguments, prevValue};
+    }
+
+    template <typename TDifferentiableFunction>
+    Result<typename TDifferentiableFunction::argument_type>
+    backtrackingLineSearch(const TDifferentiableFunction &function,
+                           const typename TDifferentiableFunction::argument_type &arguments) const {
+        const auto gradient = function.gradient(arguments);
+        const double localSlope = -sqLength(gradient);
+        const double t = localSlope * m_hyperParameters.searchControlFactor;
+        auto candidateArguments = arguments;
+        auto candidateValue = function.eval(candidateArguments);
+        double difference = std::numeric_limits<double>::lowest();
+        double learningRate = 1.0;
+        int iter = 0;
+
+        while (difference < learningRate * t) {
+            learningRate *= m_hyperParameters.reductionFactor;
+            candidateArguments = arguments - learningRate * gradient;
+
+            const double currValue = function.eval(candidateArguments);
+
+            difference = candidateValue - currValue;
+            candidateValue = currValue;
+        }
+
+        return {candidateArguments, candidateValue};
     }
 
   private:

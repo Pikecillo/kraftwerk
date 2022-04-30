@@ -1,11 +1,11 @@
 ## Melon
 
-A library of machine learning algorithms:
+A library of numerical and machine learning algorithms:
 
 - Linear Regression
+- Logistic Regression
 
 TODO:
-- Logistic Regression
 - Radial Basis Functions Interpolation
 
 ```

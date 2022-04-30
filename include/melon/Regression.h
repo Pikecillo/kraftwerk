@@ -78,6 +78,8 @@ template <typename TModel, typename TCostFunction> class Regression {
 
     virtual double predict(const argument_type &x) const { return m_model.eval(adjustInput(x)); }
 
+    const model_type model() const { return m_model; }
+
   protected:
     virtual cost_function_type getCostFunction(const training_set_type &trainingSet) = 0;
 
@@ -132,6 +134,7 @@ template <typename TModel, typename TCostFunction> class Regression {
     }
 
   protected:
+    bool m_adjust{false};
     argument_type m_means, m_sdevs;
     model_type m_model;
 };

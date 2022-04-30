@@ -48,7 +48,7 @@ template <size_t dim> Vector<dim> operator*(const double s, const Vector<dim> &v
 }
 
 template <size_t dim> void operator/=(Vector<dim> &vec, const double s) {
-    std::transform(vec.begin(), vec.end(), vec.begin(), [s](double x){ return x / s; });
+    std::transform(vec.begin(), vec.end(), vec.begin(), [s](double x) { return x / s; });
 }
 
 template <size_t dim> Vector<dim> operator/(const Vector<dim> &lhs, const Vector<dim> &rhs) {
@@ -62,11 +62,14 @@ template <size_t dim> Vector<dim> operator/(const Vector<dim> &vec, const double
     return vec * (1.0 / s);
 }
 
-template <size_t dim> double sqLength(const Vector<dim> &vec) {
+template <typename T> double sqLength(const T &vec) {
     return std::inner_product(vec.begin(), vec.end(), vec.begin(), 0.0);
 }
 
-template <size_t dim> Vector<dim> apply(const Vector<dim> &vec, std::function<double(double)>&& func) {
+template <> double sqLength(const double &sc) { return sc * sc; }
+
+template <size_t dim>
+Vector<dim> apply(const Vector<dim> &vec, std::function<double(double)> &&func) {
     Vector<dim> result;
     std::transform(vec.begin(), vec.end(), result.begin(), func);
     return result;
