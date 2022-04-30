@@ -30,8 +30,17 @@ TEST(TestLogisticRegression, predict) {
     regression.fit(trainingSet);
 
     ml::Random random;
-    const auto x = random.uniform<ml::Vector<10>>(-1.0, 1.0);
-    ASSERT_NEAR(regression.predict(x), model.eval(x), 0.01);
+    const size_t numTests = 1000;
+    const double errorTolerance = 0.02;
+    double avgError = 0.0;
+    for (size_t i = 0; i < numTests; i++) {
+        const auto x = random.uniform<ml::Vector<10>>(-10.0, 10.0);
+        avgError += std::fabs(model.eval(x) - regression.predict(x));
+    }
+
+    avgError /= static_cast<double>(numTests);
+
+    EXPECT_LT(avgError, errorTolerance);
 }
 
 int main(int argc, char **argv) {

@@ -5,11 +5,14 @@ A library of numerical and machine learning algorithms:
 - Linear Regression
 - Logistic Regression
 
-TODO:
-- Radial Basis Functions Interpolation
-
+### Build
 ```
 mkdir build
 cd build; cmake ..
 make
 ```
+
+### TODO
+
+- Regularization
+- Radial Basis Functions

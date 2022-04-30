@@ -3,7 +3,7 @@
 #include <melon/Types.h>
 
 #include <cmath>
-#include <iostream>
+
 namespace ml {
 
 /**
@@ -42,9 +42,6 @@ class GradientDescent {
 
         do {
             const auto result = backtrackingLineSearch(function, arguments);
-
-            std::cout << "From backtacking opValue " << result.optimalValue << std::endl;
-
             arguments = result.optimalArguments;
             relativeError = (prevValue - result.optimalValue) / prevValue;
             prevValue = result.optimalValue;
@@ -65,15 +62,13 @@ class GradientDescent {
         auto candidateArguments = arguments;
         auto candidateValue = function.eval(candidateArguments);
         double difference = std::numeric_limits<double>::lowest();
-        double learningRate = 1.0;
-        int iter = 0;
+        double learningRate = 2.0;
 
         while (difference < learningRate * t) {
             learningRate *= m_hyperParameters.reductionFactor;
             candidateArguments = arguments - learningRate * gradient;
 
             const double currValue = function.eval(candidateArguments);
-
             difference = candidateValue - currValue;
             candidateValue = currValue;
         }

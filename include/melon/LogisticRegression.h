@@ -24,11 +24,14 @@ class LogisticRegressionCostFunction : public CostFunction<LogisticModel<dim>> {
         double cost = 0.0;
         for (const auto &[x, y] : this->m_trainingSet) {
             const double prediction = model.eval(x);
-            cost += (y * std::log(prediction) + (1.0 - y) * std::log(1.0 - prediction));
+            if (y > 1E-8)
+                cost += (y * std::log(prediction));
+            else if (y < 1.0 - 1E-8)
+                cost += ((1.0 - y) * std::log(1.0 - prediction));
         }
 
         const double numExamples = static_cast<double>(this->m_trainingSet.size());
-        
+
         return -cost / numExamples;
     }
 };
