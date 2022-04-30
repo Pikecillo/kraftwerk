@@ -25,8 +25,16 @@ template <size_t dim> class LinearRegressionCostFunction : public CostFunction<L
             cost += (diff * diff);
         }
 
+        double regularizationTerm = 0.0;
+        for(size_t i = 0; i < model.parameters().size() - 1; i++) {
+            const auto param = model.parameters()[i];
+            regularizationTerm += (param * param);
+        }
+
+        regularizationTerm *= this->m_regularizationFactor;
+
         const double numExamples = static_cast<double>(this->m_trainingSet.size());
-        return 0.5 * cost / numExamples;
+        return (0.5 * cost + regularizationTerm) / numExamples;
     }
 };
 

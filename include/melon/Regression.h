@@ -17,7 +17,8 @@ template <typename TModel> class CostFunction {
     using gradient_type = argument_type;
     using training_set_type = TrainingSet<model_type::ArgumentDim>;
 
-    CostFunction(const training_set_type &trainingSet) : m_trainingSet(trainingSet) {}
+    CostFunction(const training_set_type &trainingSet) : m_regularizationFactor{1E-6},
+        m_trainingSet(trainingSet) {}
 
     gradient_type gradient(const argument_type &input) const {
         const double numExamples = static_cast<double>(m_trainingSet.size());
@@ -36,15 +37,17 @@ template <typename TModel> class CostFunction {
                     sum += diff;
             }
 
-            grad[i] = sum;
-        }
+            if (i < grad.size() - 1)
+                sum += m_regularizationFactor * input[i];
 
-        grad /= numExamples;
+            grad[i] = sum / numExamples;
+        }
 
         return grad;
     }
 
   protected:
+    double m_regularizationFactor;
     const training_set_type &m_trainingSet;
 };
 

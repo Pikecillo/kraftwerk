@@ -14,5 +14,4 @@ make
 
 ### TODO
 
-- Regularization
 - Radial Basis Functions

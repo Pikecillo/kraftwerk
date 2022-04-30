@@ -19,7 +19,7 @@ class LogisticRegressionCostFunction : public CostFunction<LogisticModel<dim>> {
         : CostFunction<model_type>(trainingSet) {}
 
     double eval(const argument_type &input) const {
-        model_type model(input);
+        const model_type model(input);
 
         double cost = 0.0;
         for (const auto &[x, y] : this->m_trainingSet) {
@@ -30,9 +30,16 @@ class LogisticRegressionCostFunction : public CostFunction<LogisticModel<dim>> {
                 cost += ((1.0 - y) * std::log(1.0 - prediction));
         }
 
-        const double numExamples = static_cast<double>(this->m_trainingSet.size());
+        double regularizationTerm = 0.0;
+        for(size_t i = 0; i < model.parameters().size() - 1; i++) {
+            const auto param = model.parameters()[i];
+            regularizationTerm += (param * param);
+        }
 
-        return -cost / numExamples;
+        regularizationTerm *= (0.5 * this->m_regularizationFactor);
+
+        const double numExamples = static_cast<double>(this->m_trainingSet.size());
+        return (-cost + regularizationTerm) / numExamples;
     }
 };
 
